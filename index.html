@@ -120,6 +120,12 @@ for(const hook of hookVariants){const b=document.createElement('button');b.textC
 document.querySelector('.timeline').append(hookPanel);
 const exportButton=$('export');exportButton.textContent='Export';
 
+const productionTemplate=[['Opening','Nobody saw what it cost you.',3],['The struggle',"The mornings you didn't want to get up.",4],['Turning point','But you got up anyway.',4],['Payoff','Be proud of the battles nobody applauded.',5],['End card','MIND OVER EMOTION',2]];
+const templateButton=document.createElement('button');templateButton.textContent='Load Nobody Saw · 18s';templateButton.style.cssText='display:block;width:100%;margin:8px 0';
+templateButton.onclick=()=>{if(!confirm('Replace current scenes with the Nobody Saw template? Save your project first.'))return;checkpoint();playing=false;last=0;$('play').textContent='▶ Play';scenes=productionTemplate.map(([name,copy,duration])=>({...make(name,copy,'#101015'),duration,fontSize:22,y:72}));setSelected(0);syncAudio(true);hookPanel.open=false};
+hookPanel.append(templateButton);
+
+
 </script><script>
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(err=>console.warn('Offline cache unavailable',err)));
