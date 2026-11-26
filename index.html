@@ -113,6 +113,13 @@ function paintRuler(){let host=$('ruler');host.replaceChildren();let seconds=tot
 const originalRender=render;render=function(){originalRender();paintRuler()};
 const originalExport=$('export').onclick;$('export').onclick=()=>{if(scenes.some(s=>s.mediaType==='video')){if(!confirm('Export uses browser recording. Video playback timing can vary by browser. Continue?'))return}originalExport()};
 render();
+
+const hookVariants=['Nobody saw what it cost you.','Some victories never make a sound.','You changed. Nobody noticed.'];
+const hookPanel=document.createElement('details');hookPanel.className='timeline-options';hookPanel.innerHTML='<summary>Hook Lab</summary><p class="muted">Choose an opening to test. Applies to the first scene; undo restores the previous text.</p>';
+for(const hook of hookVariants){const b=document.createElement('button');b.textContent=hook;b.style.cssText='display:block;width:100%;text-align:left;margin:6px 0';b.onclick=()=>{checkpoint();scenes[0].text=hook;setSelected(0);hookPanel.open=false};hookPanel.append(b)}
+document.querySelector('.timeline').append(hookPanel);
+const exportButton=$('export');exportButton.textContent='Export';
+
 </script><script>
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(err=>console.warn('Offline cache unavailable',err)));
