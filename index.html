@@ -125,6 +125,15 @@ const templateButton=document.createElement('button');templateButton.textContent
 templateButton.onclick=()=>{if(!confirm('Replace current scenes with the Nobody Saw template? Save your project first.'))return;checkpoint();playing=false;last=0;$('play').textContent='▶ Play';scenes=productionTemplate.map(([name,copy,duration])=>({...make(name,copy,'#101015'),duration,fontSize:22,y:72}));setSelected(0);syncAudio(true);hookPanel.open=false};
 hookPanel.append(templateButton);
 
+const retention=document.createElement('details');retention.className='timeline-options';retention.innerHTML='<summary>Retention Lab</summary><p class="muted">Editing diagnostics, not predicted audience retention.</p><div id="retentionReport"></div><button id="previewHook">Preview first 3 seconds</button>';
+hookPanel.before(retention);
+let hookEnd=null;
+function paintRetention(){const host=$('retentionReport');host.replaceChildren();const first=scenes[0],words=first.text.trim().split(/\s+/).filter(Boolean).length;const rows=[['Opening',first.duration.toFixed(1)+'s · '+words+' words'],['Hook reading load',words>9?'Review: more than 9 words':'Within 9-word editing guideline'],['Longest scene',Math.max(...scenes.map(s=>s.duration)).toFixed(1)+'s'],['Visual assets',scenes.filter(s=>s.media).length+' / '+scenes.length+' scenes'],['Total duration',total().toFixed(1)+'s']];for(const [label,value] of rows){const p=document.createElement('p');p.className='muted';p.textContent=label+': '+value;host.append(p)}}
+const retentionRender=render;render=function(){retentionRender();paintRetention()};$('copy').addEventListener('input',paintRetention);
+$('previewHook').onclick=()=>{if(playing)$('play').click();$('reset').click();hookEnd=Math.min(3,total());$('play').click()};
+function watchHook(){if(hookEnd!==null&&(!playing||t>=hookEnd)){if(playing)$('play').click();hookEnd=null}requestAnimationFrame(watchHook)}requestAnimationFrame(watchHook);paintRetention();
+
+
 
 </script><script>
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
