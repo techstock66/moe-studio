@@ -271,4 +271,28 @@ markTool();
 const audioChoices=document.createElement('div');audioChoices.style.cssText='display:flex;gap:8px;margin:8px 0';for(const [key,label] of [['narration','Narration'],['cassette','Music / FX']]){const b=document.createElement('button');b.textContent=label;b.onclick=()=>showMixer(key);audioChoices.append(b)}mixer.querySelector('.moe-sheet-head').after(audioChoices);
 }
 document.querySelector('.logo').title='MOE Studio V0.15 stability';
+
+/* V0.16 dismiss contextual controls on outside tap, not on drag */
+const projectPopover=document.querySelector('.project-menu');
+let outsideStart=null;
+function outsideTarget(target){
+ if(projectPopover.open&&!projectPopover.contains(target))return 'project';
+ if(sheetMedia.matches&&activeSheet&&!activeSheet.contains(target)&&!dock.contains(target))return activeSheet;
+ return null;
+}
+document.addEventListener('pointerdown',e=>{outsideStart=e.isPrimary&&e.button===0?{x:e.clientX,y:e.clientY,id:e.pointerId,target:outsideTarget(e.target)}:null},true);
+document.addEventListener('pointercancel',()=>{outsideStart=null},true);
+document.addEventListener('pointerup',e=>{
+ const start=outsideStart;outsideStart=null;
+ if(!start||start.id!==e.pointerId||Math.hypot(e.clientX-start.x,e.clientY-start.y)>10)return;
+ if(start.target==='project'&&!projectPopover.contains(e.target)){projectPopover.open=false;return}
+ if(start.target&&start.target===activeSheet&&!activeSheet.contains(e.target)&&!dock.contains(e.target)){
+  // Defer layout changes until the tap's normal click has completed.
+  const sheet=activeSheet;setTimeout(()=>{if(activeSheet===sheet)closeSheet()},0);
+ }
+},true);
+projectPopover.addEventListener('click',e=>{if(e.target.closest('button'))projectPopover.open=false});
+projectPopover.addEventListener('toggle',()=>{if(projectPopover.open&&activeSheet)closeSheet()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')projectPopover.open=false});
+document.querySelector('.logo').title='MOE Studio V0.16 contextual dismissal';
 </script></body></html>
