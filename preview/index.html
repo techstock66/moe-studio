@@ -237,4 +237,38 @@ const watchSheet=new MutationObserver(()=>{if(activeSheet&&((activeSheet.tagName
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
 }
 document.querySelector('.logo').title='MOE Studio V0.14 contextual sheets';
+
+/* V0.15 single mobile workspace and panel ownership */
+const stableStyle=document.createElement('style');stableStyle.textContent=`
+.mobile-dock button:last-child{color:#ddd!important}.mobile-dock button[aria-pressed=true]{color:#cdb477!important}
+.unified-text{background:#303137!important;border:1px solid #666052!important;border-left:3px solid #cdb477!important}
+@media(max-width:900px){
+body.app-shell{height:100dvh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
+body.app-shell>.top{flex:0 0 52px!important;height:52px!important}
+body.app-shell>.layout{flex:1 1 0!important;min-height:0!important;height:auto!important;overflow:hidden!important;display:flex!important}
+body.app-shell .viewer{flex:1 1 0!important;height:100%!important;min-height:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;justify-content:center!important}
+body.app-shell .stage-wrap{height:auto!important;width:min(70vw,calc((100dvh - 330px)*.5625))!important;min-height:0!important;max-height:calc(100% - 42px)!important;aspect-ratio:9/16!important;flex:0 1 auto!important}
+body.app-shell .playbar{flex:none!important}
+body.app-shell>.timeline{flex:0 0 200px!important;height:200px!important;min-height:0!important;margin:0!important;overflow:hidden!important;padding:6px 10px!important}
+body.app-shell>.mobile-dock{position:relative!important;bottom:auto!important;flex:none!important;visibility:visible!important;padding-bottom:env(safe-area-inset-bottom)!important}
+body.app-shell .moe-sheet{position:static!important;inset:auto!important;max-height:none!important;height:100%!important;width:100%!important;overflow:auto!important;display:block!important;box-shadow:none!important;border:0!important;border-radius:0!important;padding:0 12px 12px!important;order:0!important}
+body.app-shell .moe-sheet[hidden]{display:none!important}
+#mobilePanelHost{flex:0 0 min(40dvh,340px);min-height:0;overflow:hidden;background:#202022;border-top:1px solid #444}
+#mobilePanelHost[hidden]{display:none!important}
+body.moe-sheet-open>.timeline{display:none!important}
+body.clean-preview .viewer{position:fixed!important;inset:0!important;height:100dvh!important;z-index:150!important}
+body.clean-preview .stage-wrap{width:min(90vw,calc((100dvh - 90px)*.5625))!important}
+}
+`;document.head.append(stableStyle);
+if(sheetMedia.matches){
+const host=document.createElement('section');host.id='mobilePanelHost';host.hidden=true;dock.before(host);
+for(const [el] of sheetEntries)host.append(el);
+const originalOpen=openSheet,originalClose=closeSheet;
+function markTool(){const names=['Media','Text','Edit','Sync','Hook','Analyze','Audio'];for(const [i,[el]] of sheetEntries.entries()){const b=names[i]==='Sync'?autoButton:buttons[names[i]];b.setAttribute('aria-pressed',String(activeSheet===el));}host.hidden=!activeSheet;}
+closeSheet=function(){originalClose();markTool()};
+openSheet=function(el){originalOpen(el);markTool()};
+markTool();
+const audioChoices=document.createElement('div');audioChoices.style.cssText='display:flex;gap:8px;margin:8px 0';for(const [key,label] of [['narration','Narration'],['cassette','Music / FX']]){const b=document.createElement('button');b.textContent=label;b.onclick=()=>showMixer(key);audioChoices.append(b)}mixer.querySelector('.moe-sheet-head').after(audioChoices);
+}
+document.querySelector('.logo').title='MOE Studio V0.15 stability';
 </script></body></html>
