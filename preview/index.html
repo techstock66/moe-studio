@@ -201,4 +201,40 @@ const geometry=document.createElement('style');geometry.textContent='.seek-shell
 placeScroll=function(){const pad=timeScroll.clientWidth/2;timeScroll.style.setProperty('--seek-pad',pad+'px');timeScroll.style.paddingInline='0';timeContent.style.minWidth='0';const desired=timeX(t);scrollTarget=desired;timeScroll.scrollLeft=desired;scrollTarget=timeScroll.scrollLeft;};
 const proRender=render;render=function(){proRender();alignRail()};if(window.ResizeObserver)new ResizeObserver(alignRail).observe(seekShell);window.addEventListener('resize',alignRail);placeScroll();alignRail();
 const proSync=document.createElement('button');proSync.textContent='Sync';proSync.onclick=()=>{mixer.hidden=true;autoPanel.open=true;autoPanel.scrollIntoView({block:'nearest'})};mixer.append(proSync);const proMixer=showMixer;showMixer=function(key){proMixer(key);proSync.hidden=key!=='narration';};document.querySelector('.logo').title='MOE Studio V0.13 aligned timeline';
+
+/* V0.14 contextual sheets */
+const sheetCSS=document.createElement('style');sheetCSS.textContent=`
+.unified-text{background:#303137!important;border:1px solid #666052!important;border-left:3px solid #cdb477!important;color:#eee!important}
+@media(max-width:900px){
+.moe-sheet{position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;width:100%!important;max-height: min(48dvh,420px)!important;overflow:auto!important;overscroll-behavior:contain;background:#202022!important;border:1px solid #38383b!important;border-radius:16px 16px 0 0!important;padding:0 16px calc(16px + env(safe-area-inset-bottom))!important;z-index:120!important;box-shadow:0 -8px 32px #0006!important}
+.moe-sheet[hidden]{display:none!important}.moe-sheet:not([hidden]){display:block!important}
+.moe-sheet-head{position:sticky;top:0;z-index:2;background:#202022;display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #38383b;margin-bottom:12px;color:#eee;font-size:14px;font-weight:650}
+.moe-sheet-head button{background:transparent;border:0;color:#cdb477;font-weight:700;min-height:40px}
+.moe-sheet summary,.moe-sheet>h3{display:none!important}
+.moe-sheet textarea,.moe-sheet input:not([type=range]):not([type=file]),.moe-sheet select{background:#303033!important;color:#eee!important;border:1px solid #414145!important;border-radius:8px!important;padding:10px!important;font-size:16px!important}
+.moe-sheet .field{margin-bottom:14px!important}.moe-sheet label{font-size:12px!important}
+.moe-sheet button:not(.sheet-done){font-size:13px!important;min-height:38px}
+.moe-sheet input[type=range]{appearance:none!important;-webkit-appearance:none!important;background:transparent!important;height:28px!important;accent-color:#cdb477!important}
+.moe-sheet input[type=range]::-webkit-slider-runnable-track{height:3px;background:#626267;border-radius:3px}
+.moe-sheet input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border:2px solid #cdb477;background:#222;border-radius:50%;margin-top:-6px}
+body.moe-sheet-open .mobile-dock{visibility:hidden}
+}
+`;document.head.append(sheetCSS);
+const sheetMedia=matchMedia('(max-width:900px)');
+let activeSheet=null;
+const sheetEntries=[ [document.querySelector('aside.left'),'Media'],[document.querySelector('aside.right'),'Text & scene'],[timelineTools,'Edit'],[autoPanel,'AutoSync'],[hookPanel,'Hook Lab'],[retention,'Analyze'],[mixer,'Audio'] ];
+function closeSheet(){if(!activeSheet)return;const el=activeSheet;activeSheet=null;el.hidden=true;if(el.tagName==='DETAILS')el.open=false;document.querySelector('.layout').classList.remove('panel-left','panel-right');document.body.classList.remove('moe-sheet-open');}
+function openSheet(el){if(!sheetMedia.matches)return;if(activeSheet===el){closeSheet();return}closeSheet();activeSheet=el;el.hidden=false;if(el.tagName==='DETAILS')el.open=true;document.body.classList.add('moe-sheet-open');el.scrollTop=0;}
+for(const [el,title] of sheetEntries){if(!el)continue;el.classList.add('moe-sheet');const head=document.createElement('div');head.className='moe-sheet-head';head.style.display=sheetMedia.matches?'':'none';const label=document.createElement('span');label.textContent=title;const done=document.createElement('button');done.type='button';done.className='sheet-done';done.textContent='Done ✓';done.onclick=closeSheet;head.append(label,done);if(el.tagName==='DETAILS')el.querySelector('summary').after(head);else el.prepend(head);if(sheetMedia.matches)el.hidden=true;}
+if(sheetMedia.matches){
+for(const [key,el] of [['Media',sheetEntries[0][0]],['Text',sheetEntries[1][0]],['Edit',timelineTools],['Hook',hookPanel],['Analyze',retention]])buttons[key].onclick=()=>openSheet(el);
+autoButton.onclick=()=>openSheet(autoPanel);autoButton.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h15l-4-4M20 16H5l4 4"/></svg>Sync';
+for(const [key,el] of [['left',sheetEntries[0][0]],['right',sheetEntries[1][0]]])document.querySelector('[data-panel="'+key+'"]').addEventListener('click',e=>{e.stopImmediatePropagation();openSheet(el)},true);
+const sheetMixer=showMixer;showMixer=function(key){if(activeSheet!==mixer){openSheet(mixer);sheetMixer(key)}else sheetMixer(key)};
+$('mixDone').addEventListener('click',closeSheet);$('mixRemove').addEventListener('click',closeSheet);proSync.onclick=()=>openSheet(autoPanel);
+buttons.Audio.onclick=()=>showMixer('narration');
+const watchSheet=new MutationObserver(()=>{if(activeSheet&&((activeSheet.tagName==='DETAILS'&&!activeSheet.open)||activeSheet.hidden))closeSheet()});for(const [el] of sheetEntries)watchSheet.observe(el,{attributes:true,attributeFilter:['open','hidden']});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
+}
+document.querySelector('.logo').title='MOE Studio V0.14 contextual sheets';
 </script></body></html>
